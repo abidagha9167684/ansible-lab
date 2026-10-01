@@ -1,0 +1,51 @@
+---
+- name: Collect Linux Client Diagnostics
+  hosts: clients
+  become: true
+  gather_facts: false
+
+  tasks:
+
+    - name: Check hostname
+      command: hostname
+      register: hostname_result
+      changed_when: false
+
+    - name: Check disk usage
+      command: df -h /
+      register: disk_result
+      changed_when: false
+
+    - name: Check memory
+      command: free -h
+      register: memory_result
+      changed_when: false
+
+    - name: Check failed services
+      command: systemctl --failed --no-pager
+      register: failed_services
+      changed_when: false
+      failed_when: false
+
+    - name: Check Nginx status
+      command: systemctl status nginx --no-pager
+      register: nginx_status
+      changed_when: false
+      failed_when: false
+
+    - name: Check listening ports
+      command: ss -ltnp
+      register: ports_result
+      changed_when: false
+      failed_when: false
+
+    - name: Show diagnostic report
+      debug:
+        msg:
+          - "===== {{ inventory_hostname }} DIAGNOSTICS ====="
+          - "Hostname: {{ hostname_result.stdout }}"
+          - "Disk: {{ disk_result.stdout }}"
+          - "Memory: {{ memory_result.stdout }}"
+          - "Failed Services: {{ failed_services.stdout | default('None') }}"
+          - "Nginx: {{ nginx_status.stdout }}"
+          - "Listening Ports: {{ ports_result.stdout }}"
