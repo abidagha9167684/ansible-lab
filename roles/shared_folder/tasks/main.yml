@@ -1,0 +1,9 @@
+---
+
+- name: Make a Company support folder
+  file:
+    path: /company-support
+    state: directory
+    owner: root
+    group: it-support
+    mode: '2770'

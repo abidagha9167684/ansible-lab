@@ -1,0 +1,148 @@
+---
+- name: Check hostname
+  command: hostname
+  register: hostname_result
+  changed_when: false
+
+- name: Display hostname
+  debug:
+    msg: "Hostname: {{ hostname_result.stdout }}"
+
+- name: Check Nginx status
+  command: systemctl is-active nginx
+  register: nginx_result
+  changed_when: false
+  failed_when: false
+
+- name: Display Nginx status
+  debug:
+    msg: "Nginx Status: {{ nginx_result.stdout }}"
+
+- name: Nginx is healthy
+  debug:
+    msg: "Nginx: HEALTHY"
+  when: nginx_result.rc == 0
+
+- name: Nginx is unhealthy
+  debug:
+    msg: "Nginx: UNHEALTHY"
+  when: nginx_result.rc != 0
+
+
+
+- name: Check disk usage
+  shell: "df -P / | awk 'NR==2 {print $5}' | tr -d '%'"
+  register: disk_result
+  changed_when: false
+
+- name: Display disk usage
+  debug:
+    msg: "Disk Usage: {{ disk_result.stdout }}%"
+
+- name: Disk is healthy
+  debug:
+    msg: "Disk: HEALTHY"
+  when: disk_result.stdout | int < disk_warning_threshold
+
+- name: Disk warning
+  debug:
+    msg: "Disk: WARNING - Usage is {{ disk_result.stdout }}%"
+  when: disk_result.stdout | int >= disk_warning_threshold
+
+
+
+- name: Check memory usage
+  shell: "free | awk '/^Mem:/ {printf \"%.0f\", $3/$2 * 100}'"
+  register: memory_result
+  changed_when: false
+
+- name: Display memory usage
+  debug:
+    msg: "Memory Usage: {{ memory_result.stdout }}%"
+
+- name: Memory is healthy
+  debug:
+    msg: "Memory: HEALTHY"
+  when: memory_result.stdout | int < memory_warning_threshold
+
+- name: Memory warning
+  debug:
+    msg: "Memory: WARNING - Usage is {{ memory_result.stdout }}%"
+  when: memory_result.stdout | int >= memory_warning_threshold
+
+
+
+- name: Check port 80
+  wait_for:
+    host: 127.0.0.1
+    port: 80
+    timeout: 2
+    state: started
+  register: port_80_result
+  failed_when: false
+  changed_when: false
+
+- name: Port 80 is open
+  debug:
+    msg: "Port 80: OPEN"
+  when: port_80_result.failed == false
+
+- name: Port 80 is closed
+  debug:
+    msg: "Port 80: CLOSED"
+  when: port_80_result.failed == true
+
+
+- name: Check client-info package version
+  command: dpkg-query -W -f='${Version}' client-info
+  register: client_info_result
+  changed_when: false
+  failed_when: false
+
+- name: Client-info package is installed
+  debug:
+    msg: "client-info: INSTALLED - Version {{ client_info_result.stdout }}"
+  when: client_info_result.rc == 0
+
+- name: Client-info package is not installed
+  debug:
+    msg: "client-info: NOT INSTALLED"
+  when: client_info_result.rc != 0
+
+
+
+- name: Check failed systemd services
+  command: systemctl --failed --no-legend
+  register: failed_services
+  changed_when: false
+  failed_when: false
+
+- name: Systemd services are healthy
+  debug:
+    msg: "Systemd Services: HEALTHY - No failed services"
+  when: failed_services.stdout | trim == ""
+
+- name: Show failed systemd services
+  debug:
+    msg: "Systemd Services: WARNING - {{ failed_services.stdout }}"
+  when: failed_services.stdout | trim != ""
+
+
+
+
+- name: Display final client health summary
+  debug:
+    msg:
+      - "======================================"
+      - "       CLIENT HEALTH SUMMARY"
+      - "======================================"
+      - "Client: {{ hostname_result.stdout }}"
+      - "Nginx: {{ 'HEALTHY' if nginx_result.rc == 0 else 'UNHEALTHY' }}"
+      - "Port 80: {{ 'OPEN' if not port_80_result.failed else 'CLOSED' }}"
+      - "Disk Usage: {{ disk_result.stdout }}%"
+      - "Disk Status: {{ 'HEALTHY' if (disk_result.stdout | int) < disk_warning_threshold else 'WARNING' }}"
+      - "Memory Usage: {{ memory_result.stdout }}%"
+      - "Memory Status: {{ 'HEALTHY' if (memory_result.stdout | int) < memory_warning_threshold else 'WARNING' }}"
+      - "client-info: {{ 'Version ' + client_info_result.stdout if client_info_result.rc == 0 else 'NOT INSTALLED' }}"
+      - "Failed Services: {{ 'NONE' if (failed_services.stdout | trim) == '' else failed_services.stdout }}"
+      - "======================================"

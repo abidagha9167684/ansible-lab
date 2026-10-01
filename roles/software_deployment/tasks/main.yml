@@ -1,0 +1,21 @@
+---
+
+- name: Copy client-info package to client
+  copy:
+    src: client-info_{{ client_info_version }}.deb
+    dest: /tmp/client-info_{{ client_info_version }}.deb
+    mode: '0644'
+  when: client_info_state == "present"
+
+- name: Install, upgrade or rollback client-info package
+  apt:
+    deb: /tmp/client-info_{{ client_info_version }}.deb
+    state: present
+    allow_downgrade: true
+  when: client_info_state == "present"
+
+- name: Remove client-info package
+  apt:
+    name: client-info
+    state: absent
+  when: client_info_state == "absent"

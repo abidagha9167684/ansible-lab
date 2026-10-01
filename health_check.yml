@@ -1,0 +1,7 @@
+---
+- name: Check Linux Client Health
+  hosts: clients
+  become: true
+
+  roles:
+    - health_check

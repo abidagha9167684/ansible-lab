@@ -1,0 +1,3 @@
+---
+disk_warning_threshold: 80
+memory_warning_threshold: 80

@@ -1,0 +1,65 @@
+---
+- name: Nginx Automatic Recovery
+  hosts: Client2
+  become: true
+
+  tasks:
+
+    - name: Check Nginx status
+      command: systemctl is-active nginx
+      register: nginx_before
+      changed_when: false
+      failed_when: false
+
+    - name: Start Nginx if unhealthy
+      service:
+        name: nginx
+        state: started
+      register: recovery_attempt
+      when: nginx_before.rc != 0
+      failed_when: false
+
+    - name: Verify Nginx after recovery
+      command: systemctl is-active nginx
+      register: nginx_after
+      changed_when: false
+      failed_when: false
+
+    - name: Collect Nginx service status
+      command: systemctl status nginx --no-pager
+      register: nginx_service_status
+      changed_when: false
+      failed_when: false
+      when: nginx_after.rc != 0
+
+    - name: Collect Nginx configuration test
+      command: nginx -t
+      register: nginx_config_test
+      changed_when: false
+      failed_when: false
+      when: nginx_after.rc != 0
+
+    - name: Collect recent Nginx logs
+      command: journalctl -u nginx -n 20 --no-pager
+      register: nginx_logs
+      changed_when: false
+      failed_when: false
+      when: nginx_after.rc != 0
+    - name: Display recovery result
+      debug:
+        msg: "{{ 'Recovery SUCCESSFUL - Nginx is running' if nginx_after.rc == 0 else 'Recovery FAILED - Nginx is still not running' }}"
+
+    - name: Display failure diagnostics
+      debug:
+        msg:
+          - "========== NGINX FAILURE DIAGNOSTICS =========="
+          - "SERVICE STATUS:"
+          - "{{ nginx_service_status.stdout }}"
+          - ""
+          - "CONFIGURATION TEST:"
+          - "{{ nginx_config_test.stderr | default(nginx_config_test.stdout) }}"
+          - ""
+          - "RECENT LOGS:"
+          - "{{ nginx_logs.stdout }}"
+          - "================================================"
+      when: nginx_after.rc != 0

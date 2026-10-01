@@ -1,0 +1,23 @@
+---
+- name: Configure Linux Clients
+  hosts: clients
+  become: true
+
+  roles:
+  - role: nginx
+    tags: nginx
+
+  - role: users
+    tags: users
+
+  - role: shared_folder
+    tags: shared
+
+  - role: software_deployment
+    tags: software
+
+  - role: health_check
+    tags: health
+
+  - role: security_compliance
+    tags: security

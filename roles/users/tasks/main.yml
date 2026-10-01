@@ -1,0 +1,26 @@
+---
+
+- name: Create IT support Group
+  group:
+     name: it-support
+     state: present 
+
+- name: Creat helpdesk1 user
+  user:
+    name: helpdesk1
+    groups: it-support
+    append: yes
+    shell: /bin/bash
+    create_home: yes
+    state: present
+
+- name: Create helpdesk2 User
+  user:
+    name: helpdesk2
+    groups: it-support
+    append: yes
+    shell: /bin/bash
+    create_home: yes
+    state: present
+
+

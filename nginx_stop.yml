@@ -1,0 +1,10 @@
+---
+- name: Stop Nginx on Client2
+  hosts: Client2
+  become: true
+
+  tasks:
+    - name: Stop Nginx
+      service:
+        name: nginx
+        state: stopped

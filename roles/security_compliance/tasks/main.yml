@@ -1,0 +1,104 @@
+---
+- name: Check SSH password authentication
+  shell: "sshd -T | grep '^passwordauthentication'"
+  register: password_auth
+  changed_when: false
+  failed_when: false
+
+- name: Display password authentication setting
+  debug:
+    msg: "SSH {{ password_auth.stdout }}"
+
+- name: Check root SSH login
+  shell: "sshd -T | grep '^permitrootlogin'"
+  register: root_login
+  changed_when: false
+  failed_when: false
+
+- name: Check .ssh directory permissions
+  stat:
+    path: /home/ubuntu/.ssh
+  register: ssh_directory
+
+- name: Check authorized_keys permissions
+  stat:
+    path: /home/ubuntu/.ssh/authorized_keys
+  register: authorized_keys
+
+
+- name: Display SSH security compliance report
+  debug:
+    msg:
+      - "========== SSH SECURITY CHECK =========="
+      - "Client: {{ inventory_hostname }}"
+      - "Password Authentication: {{ password_auth.stdout }}"
+      - "Root Login: {{ root_login.stdout }}"
+      - ".ssh Permissions: {{ ssh_directory.stat.mode }}"
+      - "authorized_keys Permissions: {{ authorized_keys.stat.mode }}"
+      - "========================================"
+
+
+
+- name: Set SSH compliance result
+  set_fact:
+    ssh_compliant: >-
+      {{
+        'passwordauthentication no' in password_auth.stdout
+        and ssh_directory.stat.mode == '0700'
+        and authorized_keys.stat.mode == '0600'
+        and root_login.stdout in [
+          'permitrootlogin no',
+          'permitrootlogin prohibit-password'
+        ]
+      }}
+
+- name: Display compliance result
+  debug:
+    msg: "SSH Security: {{ 'COMPLIANT' if ssh_compliant else 'WARNING' }}"
+
+
+- name: Fix .ssh directory permissions
+  file:
+    path: /home/ubuntu/.ssh
+    owner: ubuntu
+    group: ubuntu
+    mode: '0700'
+    state: directory
+  when: ssh_directory.stat.mode != '0700'
+
+- name: Fix authorized_keys permissions
+  file:
+    path: /home/ubuntu/.ssh/authorized_keys
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
+    state: file
+  when: authorized_keys.stat.mode != '0600'
+
+
+- name: Re-check .ssh directory permissions
+  stat:
+    path: /home/ubuntu/.ssh
+  register: ssh_directory_after
+
+- name: Re-check authorized_keys permissions
+  stat:
+    path: /home/ubuntu/.ssh/authorized_keys
+  register: authorized_keys_after
+
+- name: Set final SSH compliance result
+  set_fact:
+    final_ssh_compliant: >-
+      {{
+        'passwordauthentication no' in password_auth.stdout
+        and ssh_directory_after.stat.mode == '0700'
+        and authorized_keys_after.stat.mode == '0600'
+        and root_login.stdout in [
+          'permitrootlogin no',
+          'permitrootlogin prohibit-password'
+        ]
+      }}
+
+- name: Display final security result
+  debug:
+    msg: "FINAL SSH Security: {{ 'COMPLIANT' if final_ssh_compliant else 'WARNING' }}"
