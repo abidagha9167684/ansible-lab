@@ -1,6 +1,6 @@
 ---
 - name: Nginx Automatic Recovery
-  hosts: Client2
+  hosts: clients
   become: true
 
   tasks:
