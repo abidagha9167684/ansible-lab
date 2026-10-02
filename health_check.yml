@@ -3,11 +3,5 @@
   hosts: clients
   become: true
 
-  pre_tasks:
-    - name: TEMPORARY n8n failure test
-      ansible.builtin.fail:
-        msg: "TEST FAILURE - n8n failure handling test"
-
-
   roles:
     - health_check
