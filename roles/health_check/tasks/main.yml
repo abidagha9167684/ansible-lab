@@ -73,25 +73,20 @@
 
 
 - name: Check port 80
-  wait_for:
-    host: 127.0.0.1
-    port: 80
-    timeout: 2
-    state: started
+  ansible.builtin.shell: "timeout 2 bash -c '</dev/tcp/127.0.0.1/80'"
   register: port_80_result
-  failed_when: false
   changed_when: false
+  failed_when: false
 
 - name: Port 80 is open
-  debug:
+  ansible.builtin.debug:
     msg: "Port 80: OPEN"
-  when: port_80_result.failed == false
+  when: port_80_result.rc == 0
 
 - name: Port 80 is closed
-  debug:
+  ansible.builtin.debug:
     msg: "Port 80: CLOSED"
-  when: port_80_result.failed == true
-
+  when: port_80_result.rc != 0
 
 - name: Check client-info package version
   command: dpkg-query -W -f='${Version}' client-info
