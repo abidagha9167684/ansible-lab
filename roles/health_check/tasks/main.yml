@@ -133,7 +133,7 @@
       - "======================================"
       - "Client: {{ hostname_result.stdout }}"
       - "Nginx: {{ 'HEALTHY' if nginx_result.rc == 0 else 'UNHEALTHY' }}"
-      - "Port 80: {{ 'OPEN' if not port_80_result.failed else 'CLOSED' }}"
+      - "Port 80: {{ 'OPEN' if port_80_result.rc == 0 else 'CLOSED' }}"
       - "Disk Usage: {{ disk_result.stdout }}%"
       - "Disk Status: {{ 'HEALTHY' if (disk_result.stdout | int) < disk_warning_threshold else 'WARNING' }}"
       - "Memory Usage: {{ memory_result.stdout }}%"
