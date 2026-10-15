@@ -1,0 +1,8 @@
+Package: company-tools
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: all
+Maintainer: Abidullah Agha
+Depends: nginx, curl
+Description: Company package that installs nginx and curl

@@ -1,0 +1,19 @@
+# Example scrape configuration for the Linux client monitoring part of the lab.
+# Goes into the scrape_configs section of /etc/prometheus/prometheus.yml on the Admin server.
+# Replace the placeholder addresses with your clients' private IPs.
+# Validate before restarting:  promtool check config /etc/prometheus/prometheus.yml
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  - job_name: 'linux_clients'
+    scrape_interval: 5s
+    scrape_timeout: 5s
+    static_configs:
+      - targets: ['CLIENT1_PRIVATE_IP:9100']
+        labels:
+          client: 'Client1'
+      - targets: ['CLIENT2_PRIVATE_IP:9100']
+        labels:
+          client: 'Client2'

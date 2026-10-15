@@ -1,0 +1,58 @@
+#!/bin/bash
+
+echo "=============================="
+echo " Linux Client Information"
+echo "=============================="
+
+echo ""
+echo "Hostname:"
+hostname
+
+echo ""
+echo "Current User:"
+whoami
+
+echo ""
+echo "Operating System:"
+grep PRETTY_NAME /etc/os-release
+
+echo ""
+echo "Kernel Version:"
+uname -r
+
+echo ""
+echo "Uptime:"
+uptime
+
+echo ""
+echo "IP Address:"
+hostname -I
+
+echo ""
+echo "CPU Information:"
+lscpu | grep "Model name"
+
+echo ""
+echo "Memory:"
+free -h
+
+echo ""
+echo "Disk Usage:"
+df -h /
+
+echo ""
+echo "Running Nginx Status:"
+systemctl is-active nginx
+
+echo ""
+echo "Listening Ports:"
+ss -tulpn | head -20
+
+echo ""
+echo "Logged-in Users:"
+who
+
+echo ""
+echo "=============================="
+echo " Client Check Complete"
+echo "=============================="

@@ -1,0 +1,7 @@
+Package: client-info-tool
+Version: 1.0.0
+Section: utils
+Priority: optional
+Architecture: all
+Maintainer: Abidullah Agha
+Description: Simple Linux client information tool
